@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bank Management System</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        h1 {
+            color: white;
+            margin-top: 30px;
+        }
+        .container {
+            background: white;
+            width: 320px;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .nav-btn {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            background-color: #4facfe;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .nav-btn:hover { background-color: #007bff; }
+
+        /* All sections hidden by default */
+        .section { display: none; margin-top: 15px; }
+
+        input {
+            width: 90%;
+            padding: 8px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .submit-btn {
+            padding: 10px 20px;
+            margin-top: 8px;
+            border: none;
+            border-radius: 6px;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .submit-btn:hover { background-color: #218838; }
+
+        #resultBox {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            display: none;
+        }
+        #resultBox.success { background: #e8f5e9; color: #2e7d32; }
+        #resultBox.error   { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+
+<h1>🏦 Bank Management System</h1>
+
+<div class="container">
+
+    <!-- NAV BUTTONS -->
+    <button class="nav-btn" onclick="showSection('secCreate')">Create</button>
+    <button class="nav-btn" onclick="showSection('secDeposit')">Deposit</button>
+    <button class="nav-btn" onclick="showSection('secWithdraw')">Withdraw</button>
+    <button class="nav-btn" onclick="showSection('secBalance')">Balance</button>
+
+    <!-- CREATE -->
+    <div class="section" id="secCreate">
+        <h3>Create Account</h3>
+        <input id="createAcc"    type="number" placeholder="Account Number">
+        <input id="createHolder" type="text"   placeholder="Holder Name">
+        <button class="submit-btn" onclick="doCreate()">Submit</button>
+    </div>
+
+    <!-- DEPOSIT -->
+    <div class="section" id="secDeposit">
+        <h3>Deposit Money</h3>
+        <input id="depositAcc" type="number" placeholder="Account Number">
+        <input id="depositAmt" type="number" placeholder="Amount">
+        <button class="submit-btn" onclick="doDeposit()">Submit</button>
+    </div>
+
+    <!-- WITHDRAW -->
+    <div class="section" id="secWithdraw">
+        <h3>Withdraw Money</h3>
+        <input id="withdrawAcc" type="number" placeholder="Account Number">
+        <input id="withdrawAmt" type="number" placeholder="Amount">
+        <button class="submit-btn" onclick="doWithdraw()">Submit</button>
+    </div>
+
+    <!-- BALANCE -->
+    <div class="section" id="secBalance">
+        <h3>Check Balance</h3>
+        <input id="balanceAcc" type="number" placeholder="Account Number">
+        <button class="submit-btn" onclick="doBalance()">Check</button>
+    </div>
+
+    <div id="resultBox"></div>
+
+</div>
+
+<script>
+
+    // ✅ Works on localhost AND Cloudflare tunnel
+    const BASE = window.location.hostname === ""
+        ? "http://localhost:8081"
+        : window.location.origin;
+
+    // Show one section, hide all others
+    function showSection(sectionId) {
+        document.querySelectorAll('.section').forEach(function(s) {
+            s.style.display = 'none';
+        });
+        document.getElementById(sectionId).style.display = 'block';
+        document.getElementById('resultBox').style.display = 'none';
+    }
+
+    // Send POST request to Java server
+    function sendRequest(path, body) {
+        fetch(BASE + path, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: body
+        })
+        .then(function(res) { return res.text(); })
+        .then(function(msg) { showResult(msg); })
+        .catch(function() {
+            showResult("Server not reachable. Open via http://localhost:8081", true);
+        });
+    }
+
+    function showResult(msg, forceError) {
+        var box = document.getElementById('resultBox');
+        var isError = forceError || /not found|insufficient|invalid|already/i.test(msg);
+        box.textContent = msg;
+        box.className = isError ? 'error' : 'success';
+        box.style.display = 'block';
+    }
+
+    // ✅ Each function reads from its OWN dedicated input IDs
+    // No shared state, no reserved word conflicts
+
+    function doCreate() {
+        var acc    = document.getElementById('createAcc').value.trim();
+        var holder = document.getElementById('createHolder').value.trim();
+        if (!acc || !holder) { showResult("Please fill all fields!", true); return; }
+        sendRequest("/create", acc + " " + holder);
+    }
+
+    function doDeposit() {
+        var acc = document.getElementById('depositAcc').value.trim();
+        var amt = document.getElementById('depositAmt').value.trim();
+        if (!acc || !amt) { showResult("Please fill all fields!", true); return; }
+        sendRequest("/deposit", acc + " " + amt);
+    }
+
+    function doWithdraw() {
+        var acc = document.getElementById('withdrawAcc').value.trim();
+        var amt = document.getElementById('withdrawAmt').value.trim();
+        if (!acc || !amt) { showResult("Please fill all fields!", true); return; }
+        sendRequest("/withdraw", acc + " " + amt);
+    }
+
+    function doBalance() {
+        var acc = document.getElementById('balanceAcc').value.trim();
+        if (!acc) { showResult("Please enter account number!", true); return; }
+        sendRequest("/balance", acc);
+    }
+
+</script>
+</body>
+</html>
