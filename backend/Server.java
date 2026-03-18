@@ -24,7 +24,7 @@ public class Server {
 
         HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", 8081), 0);
 
-        // ✅ SERVE index.html — MUST send a response for ALL paths, not just "/"
+        //  SERVE index.html — MUST send a response for ALL paths, not just "/"
         server.createContext("/", exchange -> {
             String path = exchange.getRequestURI().getPath();
 
@@ -45,7 +45,7 @@ public class Server {
                     exchange.getResponseBody().close();
                 }
             } else {
-                // ✅ CRITICAL: Send 404 for any unknown path
+                //  CRITICAL: Send 404 for any unknown path
                 // Without this, requests to /withdraw, /deposit etc.
                 // that fall through here will hang with no response
                 String err = "Not found: " + path;
@@ -56,7 +56,7 @@ public class Server {
             }
         });
 
-        // ✅ CREATE ACCOUNT
+        //  CREATE ACCOUNT
         server.createContext("/create", exchange -> {
             if (handleOptions(exchange)) return;
 
@@ -74,7 +74,7 @@ public class Server {
             }
         });
 
-        // ✅ DEPOSIT
+        //  DEPOSIT
         server.createContext("/deposit", exchange -> {
             if (handleOptions(exchange)) return;
 
@@ -93,7 +93,7 @@ public class Server {
             }
         });
 
-        // ✅ WITHDRAW
+        //  WITHDRAW
         server.createContext("/withdraw", exchange -> {
             if (handleOptions(exchange)) return;
 
@@ -116,7 +116,7 @@ public class Server {
             }
         });
 
-        // ✅ BALANCE
+        //  BALANCE
         server.createContext("/balance", exchange -> {
             if (handleOptions(exchange)) return;
 
